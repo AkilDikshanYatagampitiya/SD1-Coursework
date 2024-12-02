@@ -57,7 +57,11 @@ def process_csv_data(file_path):
         'hanley_highway_vehicles': 0,
         'peak_hour_vehicles_hanley': 0,
         'peak_times_hanley': [],
-        'rain_hours': set()
+        'rain_hours': set(),
+        'total_bicycles': 0,  # Count total bicycles
+        'average_bicycles_per_hour': 0, # Placeholder for average calculation
+        'scooters_elm_avenue': 0,  # Count scooters at Elm Avenue
+        'percentage_scooters_elm_avenue': 0  # Placeholder for scooter percentage
     }
 
     hourly_vehicles_hanley = {f'{hour:02d}:00-{hour+1:02d}:00': 0 for hour in range(24)}
@@ -67,6 +71,9 @@ def process_csv_data(file_path):
         
         for row in reader:
             outcomes['total_vehicles'] += 1
+
+            if row['VehicleType'] == 'Bicycle':
+                outcomes['total_bicycles'] += 1
             
 
             if row['travel_Direction_in'] == row['travel_Direction_out']:
@@ -85,6 +92,9 @@ def process_csv_data(file_path):
             
             if row['VehicleType'] in ['Bicycle', 'Motorcycle', 'Scooter']:
                 outcomes['two_wheeled_vehicles'] += 1
+                
+            if row['JunctionName'] == 'Elm Avenue/Rabbit Road' and row['VehicleType'] == 'Scooter':
+                outcomes['scooters_elm_avenue'] += 1
             
             if (row['JunctionName'] == 'Elm Avenue/Rabbit Road' and 
                 row['VehicleType'] == 'Buss' and 
@@ -107,7 +117,15 @@ def process_csv_data(file_path):
             if count == outcomes['peak_hour_vehicles_hanley']
         ]
     outcomes['rain_hours'] = len(outcomes['rain_hours'])
+    # Calculate average bicycles per hour if bicycles are recorded
+    if outcomes['total_bicycles'] > 0:
+        outcomes['average_bicycles_per_hour'] = round(outcomes['total_bicycles'] / 24)
 
+    # Calculate percentage of scooters at Elm Avenue
+    if outcomes['elm_avenue_vehicles'] > 0:
+        outcomes['percentage_scooters_elm_avenue'] = round(
+            (outcomes['scooters_elm_avenue'] / outcomes['elm_avenue_vehicles']) * 100
+        )
     return outcomes
 
 
@@ -122,9 +140,11 @@ def save_results_to_file(outcomes, file_name="results.txt", selected_file=""):
         file.write(f"The total number of Buses leaving Elm Avenue/Rabbit Road North is {outcomes['buses_north_elm_avenue']}\n")
         file.write(f"The total number of vehicles through both junctions not turning left or right is {outcomes['vehicles_both_junctions_no_turn']}\n")
         file.write(f"The percentage of vehicles recorded that are trucks for this date is {round(outcomes['total_trucks'] / outcomes['total_vehicles'] * 100)}%\n")
+        file.write(f"The average number of bicycles per hour is {outcomes['average_bicycles_per_hour']}\n")
         file.write(f"The total number of Vehicles recorded as over the speed limit for this date is {outcomes['over_speed_limit']}\n")
         file.write(f"The total number of vehicles recorded through Elm Avenue/Rabbit Road junction is {outcomes['elm_avenue_vehicles']}\n")
         file.write(f"The total number of vehicles recorded through Hanley Highway/Westway junction is {outcomes['hanley_highway_vehicles']}\n")
+        file.write(f"{outcomes['percentage_scooters_elm_avenue']}% of vehicles recorded through Elm Avenue/Rabbit Road that are scooters. \n")  
         file.write(f"The highest number of vehicles in an hour on Hanley Highway/Westway is {outcomes['peak_hour_vehicles_hanley']}\n")
         file.write(f"The most vehicles through Hanley Highway/Westway were recorded between {', '.join(outcomes['peak_times_hanley'])}\n")
         file.write(f"The number of hours of rain for this date is {outcomes['rain_hours']}\n")
@@ -146,7 +166,26 @@ def main():
             outcomes = process_csv_data(full_file_path)
             save_results_to_file(outcomes, selected_file=file_name)
 
-            print(outcomes)
+            # Printing the output directly to the console
+            print("-" * 50)
+            print(f"data file selected is {file_name}")
+            print(f"The total number of vehicles recorded for this date is {outcomes['total_vehicles']}")
+            print(f"The total number of trucks recorded for this date is {outcomes['total_trucks']}")
+            print(f"The total number of electric vehicles for this date is {outcomes['total_electric_vehicles']}")
+            print(f"The total number of two-wheeled vehicles for this date is {outcomes['two_wheeled_vehicles']}")
+            print(f"The total number of Buses leaving Elm Avenue/Rabbit Road North is {outcomes['buses_north_elm_avenue']}")
+            print(f"The total number of vehicles through both junctions not turning left or right is {outcomes['vehicles_both_junctions_no_turn']}")
+            print(f"The percentage of vehicles recorded that are trucks for this date is {round(outcomes['total_trucks'] / outcomes['total_vehicles'] * 100)}%")
+            print(f"The average number of bicycles per hour is {outcomes['average_bicycles_per_hour']}")
+            print(f"{outcomes['percentage_scooters_elm_avenue']}% of vehicles recorded through Elm Avenue/Rabbit Road that are scooters.")
+            print(f"The total number of Vehicles recorded as over the speed limit for this date is {outcomes['over_speed_limit']}")
+            print(f"The total number of vehicles recorded through Elm Avenue/Rabbit Road junction is {outcomes['elm_avenue_vehicles']}")
+            print(f"The total number of vehicles recorded through Hanley Highway/Westway junction is {outcomes['hanley_highway_vehicles']}")
+            print(f"The highest number of vehicles in an hour on Hanley Highway/Westway is {outcomes['peak_hour_vehicles_hanley']}")
+            print(f"The most vehicles through Hanley Highway/Westway were recorded between {', '.join(outcomes['peak_times_hanley'])}")
+            print(f"The number of hours of rain for this date is {outcomes['rain_hours']}")
+            print("-" * 50)
+            
         except FileNotFoundError:
             print(f"File {file_name} not found. Please check the file.")
         
