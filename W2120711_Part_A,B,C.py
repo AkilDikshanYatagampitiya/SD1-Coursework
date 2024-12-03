@@ -1,4 +1,3 @@
-import os
 import csv
 
 # Task A: Input Validation
@@ -155,12 +154,12 @@ def save_results_to_file(outcomes, file_name="results.txt", selected_file=""):
 
 
 def main():
-    base_path = r"C:\Users\Akil\Documents\IIT\1 Year\Programming\Tutorial\CW part A,B,C"
+    base_path = "C:/Users/Akil/Documents/IIT/1 Year/Programming/Tutorial/CW part A,B,C/"
 
     while True:
         day, month, year = validate_date_input()
         file_name = f"traffic_data{day:02d}{month:02d}{year} (1).csv"
-        full_file_path = os.path.join(base_path, file_name)
+        full_file_path = base_path+file_name
         
         try:
             outcomes = process_csv_data(full_file_path)
